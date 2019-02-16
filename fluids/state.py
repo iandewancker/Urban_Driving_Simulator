@@ -323,6 +323,7 @@ class State(object):
             for wp in new_points:
                 wp.owner = waypoint.owner
         self.ped_waypoints.extend(new_waypoints)
+        print(self.ped_waypoints)
 
         i = 0
         for wp in self.waypoints:

@@ -1,22 +1,41 @@
 import fluids
 import pygame
 import numpy as np
+import random
+import sys
 
-simulator = fluids.FluidSim(visualization_level=1,        # How much debug visualization you want to enable. Set to 0 for no vis
+
+interesting_seeds = [
+    int(sys.argv[1]),
+    54,
+    55,
+    57,
+    64,
+
+]
+
+
+np.random.seed(interesting_seeds[0])
+random.seed(interesting_seeds[0])
+
+simulator = fluids.FluidSim(visualization_level=4,        # How much debug visualization you want to enable. Set to 0 for no vis
                             fps=0,                        # If set to non 0, caps the FPS. Target is 30
                             obs_space=fluids.OBS_GRID,# OBS_BIRDSEYE, OBS_GRID, or OBS_NONE
                             background_control=fluids.BACKGROUND_CSP) # BACKGROUND_CSP or BACKGROUND_NULL
 
 state = fluids.State(
     layout=fluids.STATE_CITY,
-    background_cars=10,           # How many background cars
+    background_cars=15,           # How many background cars
     background_peds=10,
     controlled_cars=1,            # How many cars to control. Set to 0 for background cars only
-    )
+)
+
 
 simulator.set_state(state)
 
 car_keys = simulator.get_control_keys()
+
+
 
 while True:
     actions = {}
@@ -40,5 +59,6 @@ while True:
 
 
     rew = simulator.step(actions)
+    print(rew)
     obs = simulator.get_observations(car_keys)
     simulator.render()

@@ -370,7 +370,7 @@ class FluidSim(object):
                 k2 = ped_keys[k2x]
                 k2v = var_map[k2]
                 ped2 = self.state.objects[k2]
-                might_collide = futures[k1].intersects(futures_peds[k2])
+                #might_collide = futures[k1].intersects(futures_peds[k2])
 
                 # Same logic as for car-car interactions
                 if might_collide:
@@ -391,6 +391,7 @@ class FluidSim(object):
                     solver.Add(k1v == 0)
 
         # For every ped-light pair
+        """
         for k1x in range(len(ped_keys)):
             k1 = ped_keys[k1x]
             k1v = var_map[k1]
@@ -399,6 +400,7 @@ class FluidSim(object):
                 if abs(ped1.angle - fl.angle) < np.pi / 2:
                     if flc == "red" and ped1.intersects(fl):
                         solver.Add(k1v == 0)
+        """
 
         # Solve the CSP, try to assign max allowable velocity to every car/pedestrian
         #  (everything stop is a trivial solution)
