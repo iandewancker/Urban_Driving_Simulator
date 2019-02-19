@@ -41,14 +41,14 @@ class Car(Shape):
                        **kwargs)
 
         self.l_r            = self.l_f = self.ydim / 2
-        self.mass           = mass
-        self.max_vel        = max_vel
+        self.mass           = 400.0
+        self.max_vel        = 10.0#max_vel
         self.vel            = vel
         self.waypoints      = []
         self.trajectory     = []
-        self.planning_depth = planning_depth
-        self.PID_acc        = PIDController(1.0, 0, 0)
-        self.PID_steer      = PIDController(2.0, 0, 0)
+        self.planning_depth = 60
+        self.PID_acc        = PIDController(1.0, 0.0, 0.0)
+        self.PID_steer      = PIDController(9.1, 0.0000, 0.000)
         self.last_action    = SteeringAccAction(0, 0)
         self.last_obs       = None
         self.last_distance  = 0
@@ -58,6 +58,8 @@ class Car(Shape):
 
         self.last_blob_time = -1
         self.cached_blob    = self.get_future_shape()
+        self.first_goal = True
+        self.reached_goal = False
 
 
     def make_observation(self, obs_space=OBS_NONE, **kwargs):
@@ -94,7 +96,13 @@ class Car(Shape):
 
         self.vel = vel
         self.update_points(x, y, angle)
+        #print(self.running_time)
         self.running_time += 1
+        #self.angle = angle
+        #print("Car co-ords ", self.x, self.y)
+        #print("Car vel ", self.vel)
+        #print("Car angle ", angle)
+        #print("Dist to dest ", self.dist_to(self.waypoints[-1]))
 
 
 
@@ -128,15 +136,19 @@ class Car(Shape):
             return
         else:
             fluids_assert(False, "Car received an illegal action")
-        while len(self.waypoints) < self.planning_depth and len(self.waypoints) and len(self.waypoints[-1].nxt):
-            next_edge = random.choice(self.waypoints[-1].nxt)
-            next_waypoint = next_edge.out_p
-            line = next_edge.shapely_obj
-            # line = shapely.geometry.LineString([(self.waypoints[-1].x, self.waypoints[-1].y),
-            #                                     (next_waypoint.x, next_waypoint.y)]).buffer(self.ydim*0.5)
-            self.trajectory.append(((self.waypoints[-1].x, self.waypoints[-1].y),
-                                    (next_waypoint.x, next_waypoint.y), line))
-            self.waypoints.append(next_waypoint)
+
+        # only populate final goal once
+        if self.first_goal:
+            while len(self.waypoints) < self.planning_depth and len(self.waypoints) and len(self.waypoints[-1].nxt):
+                next_edge = random.choice(self.waypoints[-1].nxt)
+                next_waypoint = next_edge.out_p
+                line = next_edge.shapely_obj
+                # line = shapely.geometry.LineString([(self.waypoints[-1].x, self.waypoints[-1].y),
+                #                                     (next_waypoint.x, next_waypoint.y)]).buffer(self.ydim*0.5)
+                self.trajectory.append(((self.waypoints[-1].x, self.waypoints[-1].y),
+                                        (next_waypoint.x, next_waypoint.y), line))
+                self.waypoints.append(next_waypoint)
+            self.first_goal = False
 
         self.last_to_goal = distance_to_next - self.dist_to(self.waypoints[0])
         self.last_distance = np.linalg.norm([self.x - startx, self.y - starty])
@@ -144,6 +156,12 @@ class Car(Shape):
             self.stopped_time += 1
         else:
             self.stopped_time = 0
+
+        # did the car reach it's goal waypoint
+        if self.intersects(self.waypoints[-1]):
+            self.reached_goal = True
+            return
+
         if len(self.waypoints) and self.intersects(self.waypoints[0]):
             self.waypoints.pop(0)
             if len(self.trajectory):
@@ -176,6 +194,7 @@ class Car(Shape):
 
     def PIDController(self, target_vel, update=True):
         target_vel = target_vel.get_action() * self.max_vel
+
         if len(self.waypoints):
             target_x = self.waypoints[0].x
             target_y = self.waypoints[0].y

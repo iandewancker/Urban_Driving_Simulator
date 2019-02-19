@@ -7,7 +7,7 @@ from ortools.constraint_solver import pywrapcp
 from copy import deepcopy
 
 from shapely import speedups
-
+import scipy
 
 if speedups.available:
     speedups.enable()
@@ -81,6 +81,12 @@ class FluidSim(object):
         self.next_actions          = {}
         self.data_saver = None
 
+        self.collision_count = 0
+        self.reached_goal = False
+        self.x_hist = []
+        self.y_hist = []
+        self.angle_hist = []
+        self.dangle_hist = []
 
     def __del__(self):
         pygame.quit()
@@ -229,6 +235,21 @@ class FluidSim(object):
         self.state.time += 1
 
         reward_step = self.reward_fn(self.state)
+
+        controlled_cars = [self.state.objects[k] for k in self.state.controlled_cars.keys()]
+        collision = [-500 if self.state.is_in_collision(car) else 0 for car in controlled_cars]
+        if collision[0] == -500:
+            self.collision_count += 1
+
+        # the only object is the car under the controller
+        self.x_hist.append(controlled_cars[0].x)
+        self.y_hist.append(controlled_cars[0].y)
+
+        self.angle_hist.append(controlled_cars[0].angle)
+        self.dangle_hist.append(controlled_cars[0].dangle)
+
+        if controlled_cars[0].reached_goal:
+            self.reached_goal = True
         #print(reward_step)
 
         # Get background vehicle and pedestrian controls
@@ -333,6 +354,7 @@ class FluidSim(object):
             var_map[k] = var
 
         fast_map = {}
+        might_collide = False
         # For every car1-car2 pair,
         for k1x in range(len(keys)):
             k1 = keys[k1x]
@@ -450,3 +472,46 @@ class FluidSim(object):
             return {k:self.state.is_in_collision(self.state.type_map[Car][k]) for k in car_keys}
         else:
             return self.state.is_in_collision(self.state.type_map[Car][car_keys])
+
+    def wrap_up(self, step_counter):
+        x_prime = np.gradient(self.x_hist)
+        y_prime = np.gradient(self.y_hist)
+        angle_prime = np.gradient(self.angle_hist)
+
+        v = np.copy(self.angle_hist)
+        for k in range(len(v) - 1):
+           vv_this = v[k]
+           vv_that = v[k + 1]
+           b = np.array([vv_that - 2 * np.pi, vv_that, vv_that + 2 * np.pi])
+           vv_that = b[np.argmin(np.abs(vv_this - b))]
+           v[k + 1] = vv_that
+
+        angle_prime = np.gradient(v)
+
+        tol = 1e-2
+        g = angle_prime
+        g_sign = np.sign(np.round(g / tol))
+        num_corrections = np.sum(g_sign[1:] * g_sign[:-1] < 0)
+
+        x_2_prime = np.gradient(x_prime)
+        y_2_prime = np.gradient(y_prime)
+
+        inst_curv = np.sqrt(y_prime**2 + x_prime**2)
+        inst_comf = np.sqrt(y_2_prime**2 + x_2_prime**2)
+
+        tot_curv = scipy.integrate.simps(inst_curv) / step_counter
+        tot_comf = scipy.integrate.simps(inst_comf) / step_counter
+        tot_angle = scipy.integrate.simps(angle_prime**2) / step_counter
+        zero_cross_angle_prime = np.sum(angle_prime[1:] * angle_prime[:-1] < 0.0)
+
+        results = {}
+        results["goal_reached"] = self.reached_goal
+        results["time_steps_taken"] = step_counter
+        results["collision_count"] =self.collision_count
+        results["activity_metric"] = tot_curv
+        results["comfort_metric"] =  tot_comf
+        results["angle_metric"] = tot_angle
+        results["angle_corrections"] = num_corrections
+        results["angle_corrections2"] = np.sum(np.array(self.dangle_hist)[:-1] < 0.0)
+
+        return results

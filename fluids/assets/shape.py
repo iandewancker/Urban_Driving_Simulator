@@ -120,6 +120,7 @@ class Shape(object):
 
         self.shapely_obj = shapely.affinity.translate(self.shapely_obj,
                                                       -dx, -dy)
+        self.dangle = dangle
         self.shapely_obj = shapely.affinity.rotate(self.shapely_obj,
                                                    -dangle,
                                                    (self.x, self.y),
@@ -130,5 +131,4 @@ class Shape(object):
         self.miny, self.maxy = min(ys), max(ys)
 
         #self.shapely_obj = shapely.geometry.Polygon(self.points)
-
         
