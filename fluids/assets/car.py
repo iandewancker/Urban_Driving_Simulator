@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from scipy.integrate import odeint
 import pygame
 import random
@@ -22,9 +23,26 @@ def integrator(state, t, steer, acc, lr, lf):
     dvel = acc
     return dx, dy, dvel, dangle
 
+
+DEFAULT_TUNABLE_PARAMETERS = {
+    'max_vel': 5,
+    'pid_acc_p': 1,
+    'pid_acc_i': 0,
+    'pid_acc_d': 0,
+    'pid_steer_p': 2,
+    'pid_steer_i': 0,
+    'pid_steer_d': 0,
+}
+
+
+# NOTE(Mike) - planning_depth is a quantity that, during initial experiments, should be set to be exactly equal
+#              to the duration of the trip (number of waypoints).
+#              For now, that value is hard-coded to 60.
+# NOTE(Mike) - The max_vel value that is passed in is ignored if tunable parameters are set later.
 class Car(Shape):
     def __init__(self, vel=0, mass=400, max_vel=5,
-                 planning_depth=20, **kwargs):
+                 planning_depth=60, **kwargs):
+
         from fluids.assets import Lane, Car, Pedestrian, TrafficLight, Terrain, Sidewalk, PedCrossing
         collideables = [Lane,
                         Car,
@@ -40,15 +58,17 @@ class Car(Shape):
                        ydim=35,
                        **kwargs)
 
+        assert planning_depth == 60
+
         self.l_r            = self.l_f = self.ydim / 2
-        self.mass           = 400.0
-        self.max_vel        = 10.0#max_vel
+        self.mass           = mass
+        self.max_vel        = max_vel
         self.vel            = vel
         self.waypoints      = []
         self.trajectory     = []
-        self.planning_depth = 60
-        self.PID_acc        = PIDController(1.0, 0.0, 0.0)
-        self.PID_steer      = PIDController(9.1, 0.0000, 0.000)
+        self.planning_depth = planning_depth
+        self.PID_acc        = PIDController(1, 0, 0)
+        self.PID_steer      = PIDController(2, 0, 0)
         self.last_action    = SteeringAccAction(0, 0)
         self.last_obs       = None
         self.last_distance  = 0
@@ -61,6 +81,13 @@ class Car(Shape):
         self.first_goal = True
         self.reached_goal = False
 
+    def set_tunable_parameters(self, passed_parameters=None):
+        passed_parameters = {} if passed_parameters is None else passed_parameters
+        tunable_parameters = deepcopy(DEFAULT_TUNABLE_PARAMETERS)
+        tunable_parameters.update(passed_parameters)
+        self.max_vel = tunable_parameters['max_vel']
+        self.PID_acc = PIDController(tunable_parameters['pid_acc_p'], tunable_parameters['pid_acc_i'], tunable_parameters['pid_acc_d'])
+        self.PID_steer = PIDController(tunable_parameters['pid_steer_p'], tunable_parameters['pid_steer_i'], tunable_parameters['pid_steer_d'])
 
     def make_observation(self, obs_space=OBS_NONE, **kwargs):
         if obs_space == OBS_NONE:

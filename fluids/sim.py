@@ -477,7 +477,6 @@ class FluidSim(object):
         time_steps_taken = len(self.x_hist)
         x_prime = np.gradient(self.x_hist)
         y_prime = np.gradient(self.y_hist)
-        angle_prime = np.gradient(self.angle_hist)
 
         v = np.copy(self.angle_hist)
         for k in range(len(v) - 1):
@@ -490,8 +489,7 @@ class FluidSim(object):
         angle_prime = np.gradient(v)
 
         tol = 1e-2
-        g = angle_prime
-        g_sign = np.sign(np.round(g / tol))
+        g_sign = np.sign(np.round(angle_prime / tol))
         num_corrections = np.sum(g_sign[1:] * g_sign[:-1] < 0)
 
         x_2_prime = np.gradient(x_prime)
@@ -503,7 +501,6 @@ class FluidSim(object):
         tot_curv = scipy.integrate.simps(inst_curv) / time_steps_taken
         tot_comf = scipy.integrate.simps(inst_comf) / time_steps_taken
         tot_angle = scipy.integrate.simps(angle_prime**2) / time_steps_taken
-        zero_cross_angle_prime = np.sum(angle_prime[1:] * angle_prime[:-1] < 0.0)
 
         results = {}
         results["goal_reached"] = self.reached_goal

@@ -52,7 +52,8 @@ class State(object):
                  waypoint_width     =5,
                  use_traffic_lights =True,
                  use_ped_lights     =True,
-                 vis_level          =1):
+                 vis_level          =1,
+                 tunable_parameters =None):
 
         fluids_print("Loading layout: " + layout)
         layout = open(os.path.join(basedir, "layouts", layout + ".json"))
@@ -224,6 +225,8 @@ class State(object):
             car.color = (0x0b,0x04,0xf4)#(0x5B,0x5C,0xF7)
         self.background_cars = {k: self.objects[k] for k in car_ids[controlled_cars:]}
 
+        for c in self.controlled_cars.values():
+            c.set_tunable_parameters(tunable_parameters)
 
         fluids_print("Generating peds")
         for i in range(background_peds):

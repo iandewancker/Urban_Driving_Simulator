@@ -51,6 +51,7 @@ def generate_simulator_with_parameters(parameters):
     background_cars=0,
     background_peds=0,
     controlled_cars=1,
+    tunable_parameters=parameters,
   )
 
   simulator.set_state(state)
