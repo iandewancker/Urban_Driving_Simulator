@@ -20,3 +20,4 @@ docs/build/*
 .coverage
 
 .coveralls.yml
+.idea*
