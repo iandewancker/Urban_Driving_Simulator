@@ -71,6 +71,6 @@ while True:
 
 
 # collect preformance metrics for agent car
-results = simulator.wrap_up(step_counter)
+results = simulator.wrap_up()
 print(results)
 

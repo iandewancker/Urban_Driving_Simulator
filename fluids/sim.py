@@ -284,7 +284,7 @@ class FluidSim(object):
         Parameters
         ----------
         action_type: fluids.Action
-            Type of action to return. VelocityAction, SteeringAccAction, SteeringAction, 
+            Type of action to return. VelocityAction, SteeringAccAction, SteeringAction,
             and SteeringVelAction are currently supported
         keys: set
             Set of keys for controlled cars or background cars to return actions for
@@ -473,7 +473,8 @@ class FluidSim(object):
         else:
             return self.state.is_in_collision(self.state.type_map[Car][car_keys])
 
-    def wrap_up(self, step_counter):
+    def wrap_up(self):
+        time_steps_taken = len(self.x_hist)
         x_prime = np.gradient(self.x_hist)
         y_prime = np.gradient(self.y_hist)
         angle_prime = np.gradient(self.angle_hist)
@@ -499,14 +500,14 @@ class FluidSim(object):
         inst_curv = np.sqrt(y_prime**2 + x_prime**2)
         inst_comf = np.sqrt(y_2_prime**2 + x_2_prime**2)
 
-        tot_curv = scipy.integrate.simps(inst_curv) / step_counter
-        tot_comf = scipy.integrate.simps(inst_comf) / step_counter
-        tot_angle = scipy.integrate.simps(angle_prime**2) / step_counter
+        tot_curv = scipy.integrate.simps(inst_curv) / time_steps_taken
+        tot_comf = scipy.integrate.simps(inst_comf) / time_steps_taken
+        tot_angle = scipy.integrate.simps(angle_prime**2) / time_steps_taken
         zero_cross_angle_prime = np.sum(angle_prime[1:] * angle_prime[:-1] < 0.0)
 
         results = {}
         results["goal_reached"] = self.reached_goal
-        results["time_steps_taken"] = step_counter
+        results["time_steps_taken"] = time_steps_taken
         results["collision_count"] =self.collision_count
         results["activity_metric"] = tot_curv
         results["comfort_metric"] =  tot_comf
