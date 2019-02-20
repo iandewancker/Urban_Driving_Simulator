@@ -46,6 +46,8 @@ class Shape(object):
         self.ydim          = ydim
 
         self.angle         = angle
+        self.dangle        = 0.0
+        self.large_corrections = 0.0
         self.mass          = mass
         self.vis_level     = vis_level
         self.collideables  = collideables
@@ -110,6 +112,7 @@ class Shape(object):
     def update_points(self, x, y, angle):
         dx = self.x - x
         dy = self.y - y
+        min_delta = min(np.abs(angle - (self.angle-2*np.pi)), np.abs(angle - self.angle))
         dangle = (angle - self.angle + 6 * np.pi) % (2 * np.pi)
         self.x = x
         self.y = y
@@ -121,6 +124,10 @@ class Shape(object):
         self.shapely_obj = shapely.affinity.translate(self.shapely_obj,
                                                       -dx, -dy)
         self.dangle = dangle
+        #min_delta = min(np.abs(angle - (self.angle-2*np.pi)), np.abs(angle - self.angle))
+        #print(min_delta)
+        if min_delta > 0.07:
+            self.large_corrections += 1.0
         self.shapely_obj = shapely.affinity.rotate(self.shapely_obj,
                                                    -dangle,
                                                    (self.x, self.y),

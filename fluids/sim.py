@@ -247,6 +247,7 @@ class FluidSim(object):
 
         self.angle_hist.append(controlled_cars[0].angle)
         self.dangle_hist.append(controlled_cars[0].dangle)
+        self.large_corrections = controlled_cars[0].large_corrections
 
         if controlled_cars[0].reached_goal:
             self.reached_goal = True
@@ -510,6 +511,6 @@ class FluidSim(object):
         results["comfort_metric"] =  tot_comf
         results["angle_metric"] = tot_angle
         results["angle_corrections"] = num_corrections
-        results["angle_corrections2"] = np.sum(np.array(self.dangle_hist)[:-1] < 0.0)
+        results["large_corrections"] = self.large_corrections
 
         return results

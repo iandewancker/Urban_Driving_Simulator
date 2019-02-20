@@ -8,7 +8,7 @@ import argparse
 CSV_ORDER = (
   'max_vel', 'pid_acc_p', 'pid_acc_i', 'pid_acc_d', 'pid_steer_p', 'pid_steer_i', 'pid_steer_d',
   'goal_reached', 'time_steps_taken', 'collision_count', 'activity_metric',
-  'comfort_metric', 'angle_metric', 'angle_corrections'
+  'comfort_metric', 'angle_metric', 'angle_corrections', 'large_corrections'
 )
 
 
@@ -24,7 +24,7 @@ def reset_randomness(random_seed=None):
 
 def initialize():
   parser = argparse.ArgumentParser()
-  parser.add_argument('--random-seed', type=int, required=False, default=1)
+  parser.add_argument('--random-seed', type=int, required=False, default=27)
   parser.add_argument('--output-file', type=str, required=False)
   parser.add_argument('--num-tests', type=int, required=True)
   parser.add_argument('--max-steps', type=int, required=True)
