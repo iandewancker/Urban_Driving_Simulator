@@ -48,6 +48,7 @@ def generate_simulator_with_parameters(parameters):
 
   state = fluids.State(
     layout=fluids.STATE_CITY,
+    use_traffic_lights=False,
     background_cars=0,
     background_peds=0,
     controlled_cars=1,
