@@ -28,6 +28,7 @@ def initialize():
   parser.add_argument('--output-file', type=str, required=False)
   parser.add_argument('--num-tests', type=int, required=True)
   parser.add_argument('--max-steps', type=int, required=True)
+  parser.add_argument('--verbosity', type=int, required=False, default=2)
   args = parser.parse_args()
 
   reset_randomness(args.random_seed)
@@ -35,7 +36,7 @@ def initialize():
   output_file = args.output_file or f'{time.time()}_{args.max_steps}.csv'
   with open(output_file, 'w') as f:
     f.write(','.join(CSV_ORDER) + '\n')
-  return args.max_steps, output_file, args.num_tests
+  return args.max_steps, output_file, args.num_tests, args.verbosity
 
 
 def generate_simulator_with_parameters(parameters):
@@ -93,15 +94,22 @@ def report_results(parameters, results, output_file):
 
 
 def main():
-  max_steps, output_file, num_tests = initialize()
-  for _ in range(num_tests):
+  max_steps, output_file, num_tests, verbosity = initialize()
+  start = time.time()
+  for k in range(num_tests):
     parameters = create_random_parameters()
     reset_randomness()
     simulator = generate_simulator_with_parameters(parameters)
     run_simulation_to_completion(simulator, max_steps)
     results = simulator.wrap_up()
     report_results(parameters, results, output_file)
+    if verbosity == 2 or (verbosity == 1 and k % 10 == 9):
+      end = time.time()
+      print(f'Iteration {k:4d}, {end - start:6.2f} seconds since last print')
 
 
 if __name__ == '__main__':
   main()
+
+# To run this, execute the following from the top directory
+# PYTHONPATH=. python examples/random_search.py --output-file some-results.csv --num-tests 5 --max-steps 1000
