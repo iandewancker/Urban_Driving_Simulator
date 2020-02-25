@@ -17,19 +17,18 @@ from prefopt.random_optimizer import RandomOptimizer
 from prefopt.edward_optimizer import EdwardOptimizer
 
 
-# def run_simulation(parameters, max_steps):
+# def run_simulation(parameters, args):
 #     reset_randomness()
 #     simulator = generate_simulator_with_parameters(parameters)
-#     run_simulation_to_completion(simulator, max_steps)
+#     run_simulation_to_completion(simulator, args.max_steps)
 #     return simulator.wrap_up()
 #
 # There is, apparently, a great amount of unpleasantness between the fluids simulator and Edward.
 # I am going to get rid of Edward when I can, but right now I lack the time.
 # I think that, maybe, by wrapping this in a multiprocessing queue, we can keep them separated.
 # We'll see if this actually works ...
-def run_simulation(parameters, max_steps):
-    reset_randomness()  # This, probably, does nothing in this setting
-    return run_simulation_with_queue(parameters, max_steps)
+def run_simulation(parameters, args):
+    return run_simulation_with_queue(parameters, args.max_steps, args.random_seed)
 
 
 
@@ -64,7 +63,7 @@ def main():
     joint_metrics = []
     preference_optimizer.random_initialization(args.init_duration)
     for parameter_values in preference_optimizer.joint_points:
-        joint_metrics.append(run_simulation(dict(zip(PARAMETERS_IN_ORDER, parameter_values)), args.max_steps))
+        joint_metrics.append(run_simulation(dict(zip(PARAMETERS_IN_ORDER, parameter_values)), args))
 
     indexes_printed = set()  # This is fuckin terrible
     for preference_index, (i1, i2) in enumerate(zip(
@@ -112,7 +111,7 @@ def main():
             results_b = joint_metrics[i2]
         else:
             assert i2 == len(joint_metrics)
-            results_b = run_simulation(parameters, args.max_steps)
+            results_b = run_simulation(parameters, args)
             joint_metrics.append(results_b)
 
         preference = actual_preference_query_with_metrics(results_a, results_b)
@@ -141,8 +140,8 @@ if __name__ == '__main__':
 
 # To run this, I'm assuming you have prefopt in a neighboring directory (or with pypi, maybe)
 # For random search
-# PYTHONPATH=prefopt_priv/src:Urban_Driving_Simulator python Urban_Driving_Simulator/experiments/run_optimization.py --output-file some-results.csv --num-tests 8 --max-steps 1000 --optimizer random --init-duration 4
+# PYTHONPATH=prefopt_priv/src:Urban_Driving_Simulator python Urban_Driving_Simulator/experiments/run_optimization.py --output-file some-results.csv --num-tests 8 --max-steps 1000 --optimizer random --init-duration 4 --preference-number 1
 # For Edward
 # I had to add this to my environment to get this to work correctly
 #   export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-# PYTHONPATH=prefopt_priv/src:Urban_Driving_Simulator python Urban_Driving_Simulator/experiments/run_optimization.py --output-file some-results.csv --num-tests 8 --max-steps 1000 --optimizer edward --init-duration 4 --beta 1.1
+# PYTHONPATH=prefopt_priv/src:Urban_Driving_Simulator python Urban_Driving_Simulator/experiments/run_optimization.py --output-file some-results.csv --num-tests 8 --max-steps 1000 --optimizer edward --init-duration 4 --beta 1.1 --preference-number 1
