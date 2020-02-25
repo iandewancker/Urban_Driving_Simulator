@@ -8,11 +8,11 @@ from experiments.simulation import (
     PARAMETERS_IN_ORDER,
     parse_args,
     reset_randomness,
-    run_simulation_to_completion,
     report_results,
+    run_simulation_to_completion,
 )
 from experiments.enqueue_simulation import run_simulation_with_queue
-from experiments.state_preference import preference1
+from experiments.state_preference import recover_preference_query
 from prefopt.random_optimizer import RandomOptimizer
 from prefopt.edward_optimizer import EdwardOptimizer
 
@@ -47,6 +47,8 @@ def main():
     def fake_preference_query(x1, x2):
         return 1
 
+    actual_preference_query_with_metrics = recover_preference_query(args.preference_number)
+
     if args.optimizer == 'random':
         preference_optimizer = RandomOptimizer(fake_preference_query, DOMAIN, debug=args.verbosity == 2)
     else:
@@ -71,7 +73,7 @@ def main():
     )):
         results_a = joint_metrics[i1]
         results_b = joint_metrics[i2]
-        preference = preference1(results_a, results_b)
+        preference = actual_preference_query_with_metrics(results_a, results_b)
         preference_optimizer.preference_organizer.preferences[preference_index] = preference
 
         if i1 not in indexes_printed:
@@ -113,7 +115,7 @@ def main():
             results_b = run_simulation(parameters, args.max_steps)
             joint_metrics.append(results_b)
 
-        preference = preference1(results_a, results_b)
+        preference = actual_preference_query_with_metrics(results_a, results_b)
         preference_optimizer.preference_organizer.preferences[-1] = preference
 
         if preference_optimizer.debug:

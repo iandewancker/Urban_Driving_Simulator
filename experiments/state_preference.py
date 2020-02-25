@@ -77,3 +77,14 @@ def preference3(results_a, results_b):
     if results_a['time_steps_taken'] < results_b['time_steps_taken']:
         return 1
     return -1
+
+
+def recover_preference_query(preference_number):
+    if preference_number is None:
+        raise ValueError('No preference was stated')
+    if preference_number == 1:
+        return preference1
+    if preference_number == 2:
+        return preference2
+    if preference_number == 3:
+        return preference3
