@@ -32,7 +32,9 @@ def _run_simulation_with_queue(parameters, max_steps, random_seed, timeout_facto
     p.start()
     p.join()
     if p.exception:
-        raise p.exception
+        error, traceback = p.exception
+        print(traceback)  # There's gotta be a better way to do this
+        raise error
     next_point = q.get()
 
     signal.alarm(0)
