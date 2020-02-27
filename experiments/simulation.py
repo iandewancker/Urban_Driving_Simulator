@@ -52,6 +52,7 @@ def parse_args():
     parser.add_argument('--optimizer', type=str, required=True, choices=('random', 'edward', 'none'))
     parser.add_argument('--print-lag', type=int, required=False, default=10)
     parser.add_argument('--num-ei-test-points', type=int, required=False, default=10000)
+    parser.add_argument('--ties-swap-probability', type=float, required=False, default=0)
     args = parser.parse_args()
 
     assert args.num_tests >= args.init_duration
