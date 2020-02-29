@@ -45,7 +45,7 @@ def _parse_initial(results_a, results_b):
     return TIE_SO_FAR
 
 
-def _check_metric(results_a, results_b, metric_name, to_be_minimized, threshold, tolerance):
+def _check_metric(results_a, results_b, metric_name, tolerance=None, threshold=None, to_be_minimized=True):
     a = results_a[metric_name]
     b = results_b[metric_name]
 
@@ -67,7 +67,7 @@ def preference1(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    return _check_metric(results_a, results_b, 'time_steps_taken', True, None, None)
+    return _check_metric(results_a, results_b, 'time_steps_taken')
 
 
 def preference2(results_a, results_b):
@@ -75,7 +75,7 @@ def preference2(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    return _check_metric(results_a, results_b, 'time_steps_taken', True, None, 32)
+    return _check_metric(results_a, results_b, 'time_steps_taken', tolerance=32)
 
 
 def preference3(results_a, results_b):
@@ -83,7 +83,7 @@ def preference3(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    return _check_metric(results_a, results_b, 'time_steps_taken', True, None, 4)
+    return _check_metric(results_a, results_b, 'time_steps_taken', tolerance=4)
 
 
 def preference4(results_a, results_b):
@@ -91,8 +91,8 @@ def preference4(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    time_check = _check_metric(results_a, results_b, 'time_steps_taken', True, None, 16)
-    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', False, .5, .1)
+    time_check = _check_metric(results_a, results_b, 'time_steps_taken', tolerance=10)
+    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', threshold=.5, tolerance=.1)
     return comfort_check or time_check
 
 
@@ -101,8 +101,8 @@ def preference5(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    time_check = _check_metric(results_a, results_b, 'time_steps_taken', True, None, 2)
-    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', False, 2.0, .1)
+    time_check = _check_metric(results_a, results_b, 'time_steps_taken', tolerance=3)
+    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', threshold=.3, tolerance=.03)
     return comfort_check or time_check
 
 
@@ -111,10 +111,9 @@ def preference6(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    time_check = _check_metric(results_a, results_b, 'time_steps_taken', True, 300, 16)
-    angle_check = _check_metric(results_a, results_b, 'angle_metric', True, .005, .0001)
-    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', False, None, None)
-    return time_check or angle_check or comfort_check
+    time_check = _check_metric(results_a, results_b, 'time_steps_taken', threshold=300, tolerance=12)
+    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', tolerance=.1)
+    return time_check or comfort_check
 
 
 def preference7(results_a, results_b):
@@ -122,21 +121,9 @@ def preference7(results_a, results_b):
     if initial_check != TIE_SO_FAR:
         return initial_check
 
-    time_check = _check_metric(results_a, results_b, 'time_steps_taken', True, 300, 16)
-    angle_check = _check_metric(results_a, results_b, 'angle_metric', True, .02, .001)
-    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', False, None, .2)
-    return time_check or angle_check or comfort_check
-
-
-def preference8(results_a, results_b):
-    initial_check = _parse_initial(results_a, results_b)
-    if initial_check != TIE_SO_FAR:
-        return initial_check
-
-    time_check = _check_metric(results_a, results_b, 'time_steps_taken', True, None, 8)
-    angle_check = _check_metric(results_a, results_b, 'angle_metric', True, .02, .001)
-    comfort_check = _check_metric(results_a, results_b, 'comfort_metric', False, 1, .1)
-    return angle_check or comfort_check or time_check
+    time_check = _check_metric(results_a, results_b, 'time_steps_taken', threshold=160, tolerance=12)
+    comfort_check = _check_metric(results_a, results_b, 'comfort_metric')
+    return time_check or comfort_check
 
 
 def recover_preference_query(preference_number):
@@ -156,6 +143,4 @@ def recover_preference_query(preference_number):
         return preference6
     if preference_number == 7:
         return preference7
-    if preference_number == 8:
-        return preference8
     raise ValueError('WTF test are you running')
