@@ -31,6 +31,10 @@ def run_simulation(parameters, args):
     return run_simulation_with_queue(parameters, args.max_steps, args.random_seed)
 
 
+def break_tie_if_needed(preference, args):
+    return np.random.random() > .5 if (args.optimizer == 'edwardT' and preference == 0) else preference
+
+
 
 # This loop is a little grosser than I would like because of the fact that the preference query is not dependent
 # on the parameters, but rather the metrics.  Rather than try and build a weird wrapper with the optimizer object
@@ -72,7 +76,7 @@ def main():
     )):
         results_a = joint_metrics[i1]
         results_b = joint_metrics[i2]
-        preference = actual_preference_query_with_metrics(results_a, results_b)
+        preference = break_tie_if_needed(actual_preference_query_with_metrics(results_a, results_b), args)
         preference_optimizer.preference_organizer.preferences[preference_index] = preference
 
         if i1 not in indexes_printed:
@@ -114,7 +118,7 @@ def main():
             results_b = run_simulation(parameters, args)
             joint_metrics.append(results_b)
 
-        preference = actual_preference_query_with_metrics(results_a, results_b)
+        preference = break_tie_if_needed(actual_preference_query_with_metrics(results_a, results_b), args)
         preference_optimizer.preference_organizer.preferences[-1] = preference
 
         if preference_optimizer.debug:

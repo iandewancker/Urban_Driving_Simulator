@@ -49,14 +49,15 @@ def parse_args():
     parser.add_argument('--init-duration', type=int, required=False, default=5)
     parser.add_argument('--preference-number', type=int, required=False)
     parser.add_argument('--beta', type=float, required=False)
-    parser.add_argument('--optimizer', type=str, required=True, choices=('random', 'edward', 'none'))
+    parser.add_argument('--optimizer', type=str, required=True, choices=('random', 'edward', 'none', 'edwardT'))
     parser.add_argument('--print-lag', type=int, required=False, default=10)
     parser.add_argument('--num-ei-test-points', type=int, required=False, default=10000)
     parser.add_argument('--ties-swap-probability', type=float, required=False, default=0)
     args = parser.parse_args()
 
     assert args.num_tests >= args.init_duration
-    assert args.optimizer != 'prefopt' or args.beta
+    assert args.optimizer in ('none', 'random') or args.beta
+    assert args.optimizer != 'edwardT' or args.beta == 1.01
 
     return args
 
